@@ -1,5 +1,5 @@
 {
-  "author" : "",
+  "author" : "Florian Roeder",
   "commands" : [
     {
       "script" : "script.js",
@@ -17,7 +17,7 @@
   },
   "identifier" : "com.example.sketch.7c4833e7-9b5a-44e2-a794-ae89136ae4fa",
   "version" : "1.0",
-  "description" : "",
-  "authorEmail" : "",
+  "description" : "Export Artboards to iOS Storyboard for prototyping",
+  "authorEmail" : "roederf@gmx.de",
   "name" : "prototypeStoryboard"
 }
