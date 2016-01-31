@@ -53,6 +53,7 @@ function ViewController(name) {
     this.sceneMemberID = "viewController";
     this.layoutGuides = [ new ViewControllerLayoutGuide("top"), new ViewControllerLayoutGuide("bottom") ];
     this.view = new View();
+    this.simulatedScreenMetrics = new SimulatedScreenMetrics("retina47");
         
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "viewController", tablevel);
@@ -120,6 +121,15 @@ function ViewControllerLayoutGuide(type) {
     }
 }
 
+function SimulatedScreenMetrics(type) {
+    this.key = "simulatedDestinationMetrics";
+    this.type = type;
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "simulatedScreenMetrics", tablevel);
+    }
+}
+
 function Placeholder() {
     this.placeholderIdentifier = "IBFirstResponder";
     this.ID = generateID();
@@ -152,6 +162,11 @@ function Image(name, w, h) {
 }
 
 function buildStoryboard(layers) {
+    // todo:
+    // create image asset for artboard
+    // create viewcontroller for artboard
+    // link
+    
     var sb = new Storyboard();
         
     return sb;
@@ -214,9 +229,6 @@ function writeXmlObject(obj, name, tablevel) {
                         hasChildren = true;
                     }
                     result += obj[property].writeXml(tablevel + _tab);
-                    //result += tablevel + _tab + "<" + property;
-                    //result += writeAttributes(obj[property]);
-                    //result += "/>\n";
                 }
                 
             }
