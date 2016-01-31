@@ -1,5 +1,16 @@
 @import 'helper.js'
 
+// todo:
+// initial ViewController
+// add Button + transition instead of imageview
+// create 2x and 3x assets
+// define name conventions to slice artboard into UI Elements
+// add support for several screen sizes
+// convert text as text
+// convert simple shapes into views without use of bitmaps?
+// export assets as vector (pdf?)
+
+
 var _tab = "    ";
 
 function Storyboard() {
@@ -195,7 +206,7 @@ function StoryboardExport(doc) {
     };
     
     this.storyboard = new Storyboard();
-    
+    var initalViewControllerDefined = false;
     // for each artboard do create viewcontroller
     var artboards = doc.currentPage().artboards().objectEnumerator();
     while (artboard = artboards.nextObject()) {
@@ -210,12 +221,17 @@ function StoryboardExport(doc) {
         scene.objects.push(new Placeholder());
         this.storyboard.scenes.push(scene);
         
+        // just select the first artboard as inital view
+        if (!initalViewControllerDefined) {
+            this.storyboard.initialViewController = viewCtrl.ID;
+            initalViewControllerDefined = true;
+        }
+        
         var screenType = getScreenByWidthAndHeight(artboard.frame().width(), artboard.frame().height());
         if (screenType) {
             viewCtrl.simulatedScreenMetrics = new SimulatedScreenMetrics(screenType);
             viewCtrl.view.rect = new Rect(0, 0, artboard.frame().width(), artboard.frame().height());
         }
-        
         
         // add imageview
         viewCtrl.view.subviews = [];
@@ -223,8 +239,6 @@ function StoryboardExport(doc) {
         
         this.storyboard.resources.push( new Image(artboardName, artboard.frame().width(), artboard.frame().height()) );
     }
-    
-    
         
     var saveTextToFile = function(filename, text) {
       var path = [@"" stringByAppendingString:filename];
