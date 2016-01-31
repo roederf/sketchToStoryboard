@@ -10,18 +10,12 @@ function Storyboard() {
     this.useAutolayout = "YES";
     this.useTraitCollections = "YES";
     this.initialViewController = null;
-    this.content = [ new Dependencies(), new Scenes(), new Resources() ];
+    this.dependencies = [ new Deployment(), new PlugIn() ];
+    this.scenes = [ new Scene() ];
+    //this.resources = [ new Image() ];
 
     this.writeXml = function() {
         return writeXmlObject(this, "document", "");
-    }
-}
-
-function Dependencies() {
-    this.content = [ new Deployment(), new PlugIn() ];
-    
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "dependencies", tablevel);
     }
 }
 
@@ -42,47 +36,25 @@ function PlugIn() {
     }
 }
 
-function Scenes() {
-    this.content = [ new Scene() ];
-    
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "scenes", tablevel);
-    }
-}
-
 function Scene() {
     this.sceneID = generateID();
-    this.content = [ new SceneObjects(), new Point(240,200) ];
+    this.objects = [ new ViewController("ViewController") ];
+    this.point = new Point(240,200);
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "scene", tablevel);
     }
 }
 
-function SceneObjects() {
-    this.content = [ new ViewController("ViewController"), new Placeholder() ];
-    
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "objects", tablevel);
-    }
-}
-
 function ViewController(name) {
-    this.content = [];
     this.id = generateID();
     this.customClass = name;
     this.customModuleProvider = "target";
     this.sceneMemberID = "viewController";
-    
+    this.layoutGuides = [ new ViewControllerLayoutGuide("top"), new ViewControllerLayoutGuide("bottom") ];
+        
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "viewController", tablevel);
-    }
-}
-
-function LayoutGuides() {
-    this.content = [ new ViewControllerLayoutGuide("top"), new ViewControllerLayoutGuide("bottom") ];
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "layoutGuides", tablevel);
     }
 }
 
@@ -115,15 +87,6 @@ function Point(x,y) {
     }
 }
 
-function Resources() {
-    //this.content = [new Image("Übersicht", 320, 568), new Image("Willkommen", 320, 568)];
-    this.content = [];
-    
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "resources", tablevel);
-    }
-}
-
 function Image(name, w, h) {
     this.name = name;
     this.width = w;
@@ -147,9 +110,16 @@ function writeAttributes(obj) {
             // do stuff
             //log( typeof storyboard[property] );
 
-            if(typeof obj[property] != 'function' &&
-               property != "content"){
-                result += " " + property + "=\"" + obj[property] + "\"";
+            if(typeof obj[property] != 'function'){
+                
+                if( Object.prototype.toString.call( obj[property] ) != '[object Array]'
+                  && Object.prototype.toString.call( obj[property] ) != '[object Object]') {
+                    result += " " + property + "=\"" + obj[property] + "\"";    
+                }
+                else {
+                    //log(property + "is array");
+                }
+                
             }
         }
     }
@@ -160,7 +130,44 @@ function writeAttributes(obj) {
 function writeXmlObject(obj, name, tablevel) {
     var result = tablevel + "<" + name;
     result += writeAttributes(obj);
-    
+    var hasChildren = false;
+    for (var property in obj) {
+        if (obj.hasOwnProperty(property)) {
+            if(typeof obj[property] != 'function'){
+                
+                if( Object.prototype.toString.call( obj[property] ) === '[object Array]' ) {
+                    
+                    if (!hasChildren) {
+                        result += ">\n";
+                        hasChildren = true;
+                    }
+                    result += tablevel + _tab + "<" + property + ">\n";
+                    var array = obj[property];
+                    for(var i=0; i<array.length; i++) {
+                        result += array[i].writeXml(tablevel + _tab + _tab);
+                    }
+                    result += tablevel + _tab + "</" + property + ">\n";
+                }
+                else if (Object.prototype.toString.call( obj[property] ) === '[object Object]' ) {
+                    if (!hasChildren) {
+                        result += ">\n";
+                        hasChildren = true;
+                    }
+                    result += tablevel + _tab + "<" + property;
+                    result += writeAttributes(obj[property]);
+                    result += "/>\n";
+                }
+                
+            }
+        }
+    }
+    if (hasChildren) {
+        result += tablevel + "</" + name + ">\n";
+    }
+    else {
+        result += "/>\n";
+    }
+    /*
     if (obj.content && obj.content.length > 0) {
         result += ">\n";
         for(var i=0; i<obj.content.length; i++) {
@@ -171,6 +178,7 @@ function writeXmlObject(obj, name, tablevel) {
     else {
         result += "/>\n";
     }
+    */
 
     return result;
 }
