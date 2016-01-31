@@ -15,19 +15,6 @@ function Storyboard() {
     this.writeXml = function() {
         return writeXmlObject(this, "document", "");
     }
-    /*
-    this.writeXml = function() {
-        var result = "<document";
-        result += writeAttributes(this);
-        result += ">\n";
-        for(var i=0; i<this.content.length; i++) {
-            result += this.content[i].writeXml(_tab);
-        }
-        result += "</document>\n";
-
-        return result;
-    }
-    */
 }
 
 function Dependencies() {
@@ -35,17 +22,6 @@ function Dependencies() {
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "dependencies", tablevel);
-        /*
-        var result = tablevel + "<dependencies";
-        result += writeAttributes(this);
-        result += ">\n";
-        for(var i=0; i<this.content.length; i++) {
-            result += this.content[i].writeXml(tablevel + _tab);
-        }
-        result += tablevel + "</dependencies>\n";
-
-        return result;
-        */
     }
 }
 
@@ -54,13 +30,6 @@ function Deployment() {
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "deployment", tablevel);
-        /*
-        var result = tablevel + "<deployment";
-        result += writeAttributes(this);
-        result += "/>\n";
-        
-        return result;
-        */
     }
 }
 
@@ -70,51 +39,98 @@ function PlugIn() {
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this,"plugIn", tablevel);
-        /*
-        var result = tablevel + "<plugIn";
-        result += writeAttributes(this);
-        result += "/>\n";
-        
-        return result;
-        */
     }
 }
 
 function Scenes() {
-    this.content = [];
+    this.content = [ new Scene() ];
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "scenes", tablevel);
-        /*
-        var result = tablevel + "<scenes";
-        result += writeAttributes(this);
-        result += ">\n";
-        for(var i=0; i<this.content.length; i++) {
-            result += this.content[i].writeXml(tablevel + _tab);
-        }
-        result += tablevel + "</scenes>\n";
+    }
+}
 
-        return result;
-        */
+function Scene() {
+    this.sceneID = generateID();
+    this.content = [ new SceneObjects(), new Point(240,200) ];
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "scene", tablevel);
+    }
+}
+
+function SceneObjects() {
+    this.content = [ new ViewController("ViewController"), new Placeholder() ];
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "objects", tablevel);
+    }
+}
+
+function ViewController(name) {
+    this.content = [];
+    this.id = generateID();
+    this.customClass = name;
+    this.customModuleProvider = "target";
+    this.sceneMemberID = "viewController";
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "viewController", tablevel);
+    }
+}
+
+function LayoutGuides() {
+    this.content = [ new ViewControllerLayoutGuide("top"), new ViewControllerLayoutGuide("bottom") ];
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "layoutGuides", tablevel);
+    }
+}
+
+function ViewControllerLayoutGuide(type) {
+    this.type = type;
+    this.id = generateID();
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "viewControllerLayoutGuide", tablevel);
+    }
+}
+
+function Placeholder() {
+    this.placeholderIdentifier = "IBFirstResponder";
+    this.id = generateID();
+    this.sceneMemberID = "firstResponder";
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "placeholder", tablevel);
+    }
+}
+
+function Point(x,y) {
+    this.key = "canvasLocation";
+    this.x = "" + x;
+    this.y = "" + y;
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "point", tablevel);
     }
 }
 
 function Resources() {
+    //this.content = [new Image("Übersicht", 320, 568), new Image("Willkommen", 320, 568)];
     this.content = [];
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "resources", tablevel);
-        /*
-        var result = tablevel + "<resources";
-        result += writeAttributes(this);
-        result += ">\n";
-        for(var i=0; i<this.content.length; i++) {
-            result += this.content[i].writeXml(tablevel + _tab);
-        }
-        result += tablevel + "</resources>\n";
+    }
+}
 
-        return result;
-        */
+function Image(name, w, h) {
+    this.name = name;
+    this.width = w;
+    this.height = h;
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "image", tablevel);
     }
 }
 
@@ -157,4 +173,11 @@ function writeXmlObject(obj, name, tablevel) {
     }
 
     return result;
+}
+
+// just a temp placeholder:
+var counter = 100;
+function generateID() {
+    counter++;
+    return "flr-Ab-" + counter;
 }
