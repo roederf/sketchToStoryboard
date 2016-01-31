@@ -2,11 +2,8 @@
 
 var onRun = function(context) 
 {
-    
-    
     var documentName = context.document.displayName();
     var plugin = context.plugin;
-    
     
     var fileURL = fileSaver();
     var exportPath = fileURL.path() + '/' + documentName + '.storyboard';
