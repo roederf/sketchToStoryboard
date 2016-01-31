@@ -6,7 +6,8 @@ var onRun = function(context)
     var plugin = context.plugin;
     
     var fileURL = fileSaver();
-    var exportPath = fileURL.path() + '/' + documentName + '.storyboard';
+    var directory = fileURL.path();
+    var filename = fileURL.path() + '/main.storyboard';
         
     //var selectedLayers = context.selection;
     //var selectedCount = selectedLayers.count();
@@ -15,7 +16,7 @@ var onRun = function(context)
     //    var selectedLayers = context.document.currentPage().layers();
     //} 
     
-    if (writeDocument(plugin, exportPath, context.document)) {
+    if (writeDocument(directory, filename, context.document)) {
         showMessage("Storyboard created.");
     }
     else {
@@ -29,7 +30,7 @@ function showMessage(msg) {
     [app displayDialog:msg withTitle:"Message"];
 }
 
-function writeDocument(plugin, filename, document) {
+function writeDocument(directory, filename, document) {
     log("Writing document: " + filename);
     
     //var templateUrl = plugin.urlForResourceNamed("main.storyboard");
@@ -38,7 +39,7 @@ function writeDocument(plugin, filename, document) {
     //text += readTextFromFile(templateUrl);
     
     var storyboardExport = new StoryboardExport(document);
-    storyboardExport.export(filename);
+    storyboardExport.export(directory, filename, document);
     
     log("Success.");
     
