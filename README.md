@@ -1,7 +1,7 @@
 # sketchToStoryboard
 Sketch Plugin to export artboards into an iOS Storyboard as a native prototype
 
-Sketch Version: > 3.5
+Sketch Version: ≥ 3.5
 
 - Create a folder named "prototypeStoryboard.sketchplugin" in sketch plugin folder
 - Copy "Contents" folder of this repository into prototypeStoryboard.sketchplugin (maybe use terminal)
