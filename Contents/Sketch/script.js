@@ -8,14 +8,14 @@ var onRun = function(context)
     var fileURL = fileSaver();
     var exportPath = fileURL.path() + '/' + documentName + '.storyboard';
         
-    var selectedLayers = context.selection;
-    var selectedCount = selectedLayers.count();
+    //var selectedLayers = context.selection;
+    //var selectedCount = selectedLayers.count();
     
-    if (selectedCount == 0) {
-        var selectedLayers = context.document.currentPage().layers();
-    } 
+    //if (selectedCount == 0) {
+    //    var selectedLayers = context.document.currentPage().layers();
+    //} 
     
-    if (writeDocument(plugin, exportPath, selectedLayers)) {
+    if (writeDocument(plugin, exportPath, context.document)) {
         showMessage("Storyboard created.");
     }
     else {
@@ -29,22 +29,18 @@ function showMessage(msg) {
     [app displayDialog:msg withTitle:"Message"];
 }
 
-function writeDocument(plugin, filename, selectedLayers) {
-    log("writeDocument: " + filename);
-    var text = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" + "\n";
+function writeDocument(plugin, filename, document) {
+    log("Writing document: " + filename);
     
     //var templateUrl = plugin.urlForResourceNamed("main.storyboard");
     //log(templateUrl);
         
     //text += readTextFromFile(templateUrl);
-    var sb = buildStoryboard(selectedLayers);
-    text += sb.writeXml();
     
-    log(text);
-        
-    saveTextToFile(filename, text);
+    var storyboardExport = new StoryboardExport(document);
+    storyboardExport.export(filename);
     
-    log("success.");
+    log("Success.");
     
     return true;
 }
@@ -61,12 +57,6 @@ function readTextFromFile (filename) {
     var result = [NSString stringWithContentsOfFile:filename];
     
     return result;
-}
-
-function saveTextToFile (filename, text) {
-  var path = [@"" stringByAppendingString:filename];
-  var str = [@"" stringByAppendingString:text];
-  str.dataUsingEncoding_(NSUTF8StringEncoding).writeToFile_atomically_(path, true);
 }
 
 function fileSaver() {

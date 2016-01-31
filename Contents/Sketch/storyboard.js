@@ -1,3 +1,5 @@
+@import 'helper.js'
+
 var _tab = "    ";
 
 function Storyboard() {
@@ -11,8 +13,8 @@ function Storyboard() {
     this.useTraitCollections = "YES";
     this.initialViewController = null;
     this.dependencies = [ new Deployment(), new PlugIn() ];
-    this.scenes = [ new Scene() ];
-    //this.resources = [ new Image() ];
+    this.scenes = [];
+    //this.resources = [];
 
     this.writeXml = function() {
         return writeXmlObject(this, "document", "");
@@ -38,7 +40,7 @@ function PlugIn() {
 
 function Scene() {
     this.sceneID = generateID();
-    this.objects = [ new ViewController("ViewController"), new Placeholder() ];
+    this.objects = [];
     this.point = new Point(240,200);
     
     this.writeXml = function(tablevel) {
@@ -161,92 +163,45 @@ function Image(name, w, h) {
     }
 }
 
-function buildStoryboard(layers) {
-    // todo:
-    // create image asset for artboard
-    // create viewcontroller for artboard
-    // link
+// ------ //
+
+function StoryboardExport(doc) {
+    this.assetSlices = [];
     
-    var sb = new Storyboard();
+    this.storyboard = new Storyboard();
+    
+    // for each artboard do create viewcontroller
+    var artboards = doc.currentPage().artboards().objectEnumerator();
+    while (artboard = artboards.nextObject()) {
+        var artboardName = artboard.name().trim();
+        log(artboardName);
         
-    return sb;
-}
-
-function writeAttributes(obj) {
-    var result = "";
-    for (var property in obj) {
-        if (obj.hasOwnProperty(property)) {
-            // do stuff
-            //log( typeof storyboard[property] );
-
-            if(typeof obj[property] != 'function'){
-                
-                if( Object.prototype.toString.call( obj[property] ) != '[object Array]'
-                  && Object.prototype.toString.call( obj[property] ) != '[object Object]') {
-                    if (property == "ID") {
-                        result += " " + "id" + "=\"" + obj[property] + "\"";    
-                    }
-                    else {
-                        result += " " + property + "=\"" + obj[property] + "\"";        
-                    }
-                    
-                }
-                else {
-                    //log(property + "is array");
-                }
-                
-            }
-        }
+        var scene = new Scene();
+        var viewCtrl = new ViewController("ViewController");
+        scene.objects.push(viewCtrl);
+        scene.objects.push(new Placeholder());
+        this.storyboard.scenes.push(scene);
+        
+        // add imageview
     }
     
-    return result;
-}
-
-function writeXmlObject(obj, name, tablevel) {
-    var result = tablevel + "<" + name;
-    result += writeAttributes(obj);
-    var hasChildren = false;
-    for (var property in obj) {
-        if (obj.hasOwnProperty(property)) {
-            if(typeof obj[property] != 'function'){
-                
-                if( Object.prototype.toString.call( obj[property] ) === '[object Array]' ) {
-                    
-                    if (!hasChildren) {
-                        result += ">\n";
-                        hasChildren = true;
-                    }
-                    result += tablevel + _tab + "<" + property + ">\n";
-                    var array = obj[property];
-                    for(var i=0; i<array.length; i++) {
-                        result += array[i].writeXml(tablevel + _tab + _tab);
-                    }
-                    result += tablevel + _tab + "</" + property + ">\n";
-                }
-                else if (Object.prototype.toString.call( obj[property] ) === '[object Object]' ) {
-                    if (!hasChildren) {
-                        result += ">\n";
-                        hasChildren = true;
-                    }
-                    result += obj[property].writeXml(tablevel + _tab);
-                }
-                
-            }
-        }
+    // store slice for image export
+    var slices = doc.currentPage().artboards().objectEnumerator();
+    while (slice = slices.nextObject()) {
+        this.assetSlices.push(slice);
+        //[doc saveArtboardOrSlice:slice toFile:exportPath + 'img/' + slice.name() + '.png'];
     }
-    if (hasChildren) {
-        result += tablevel + "</" + name + ">\n";
+        
+    var saveTextToFile = function(filename, text) {
+      var path = [@"" stringByAppendingString:filename];
+      var str = [@"" stringByAppendingString:text];
+      str.dataUsingEncoding_(NSUTF8StringEncoding).writeToFile_atomically_(path, true);
+    };
+    
+    this.export = function(filename) {
+        var text = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" + "\n";
+        text += this.storyboard.writeXml();
+        saveTextToFile(filename, text);
     }
-    else {
-        result += "/>\n";
-    }
-
-    return result;
-}
-
-// just a temp placeholder:
-var counter = 100;
-function generateID() {
-    counter++;
-    return "flr-Ab-" + counter;
+    
 }
