@@ -10,7 +10,7 @@ function Storyboard() {
     this.useAutolayout = "YES";
     this.useTraitCollections = "YES";
     this.initialViewController = null;
-    this.content = [ new Dependencies() ];
+    this.content = [ new Dependencies(), new Scenes(), new Resources() ];
 
     this.writeXml = function() {
         var result = "<document";
@@ -62,6 +62,38 @@ function PlugIn() {
         result += writeAttributes(this);
         result += "/>\n";
         
+        return result;
+    }
+}
+
+function Scenes() {
+    this.content = [];
+    
+    this.writeXml = function(tablevel) {
+        var result = tablevel + "<scenes";
+        result += writeAttributes(this);
+        result += ">\n";
+        for(var i=0; i<this.content.length; i++) {
+            result += this.content[i].writeXml(tablevel + _tab);
+        }
+        result += tablevel + "</scenes>\n";
+
+        return result;
+    }
+}
+
+function Resources() {
+    this.content = [];
+    
+    this.writeXml = function(tablevel) {
+        var result = tablevel + "<resources";
+        result += writeAttributes(this);
+        result += ">\n";
+        for(var i=0; i<this.content.length; i++) {
+            result += this.content[i].writeXml(tablevel + _tab);
+        }
+        result += tablevel + "</resources>\n";
+
         return result;
     }
 }
