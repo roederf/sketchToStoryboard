@@ -38,7 +38,7 @@ function PlugIn() {
 
 function Scene() {
     this.sceneID = generateID();
-    this.objects = [ new ViewController("ViewController") ];
+    this.objects = [ new ViewController("ViewController"), new Placeholder() ];
     this.point = new Point(240,200);
     
     this.writeXml = function(tablevel) {
@@ -47,20 +47,73 @@ function Scene() {
 }
 
 function ViewController(name) {
-    this.id = generateID();
+    this.ID = generateID();
     this.customClass = name;
     this.customModuleProvider = "target";
     this.sceneMemberID = "viewController";
     this.layoutGuides = [ new ViewControllerLayoutGuide("top"), new ViewControllerLayoutGuide("bottom") ];
+    this.view = new View();
         
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "viewController", tablevel);
     }
 }
 
+function View() {
+    this.key = "view";
+    this.contentMode ="scaleToFill";
+    this.ID = generateID();
+    this.rect = new Rect();
+    this.autoresizingMask = new AutoresizeMask();
+    this.animations = new Animations();
+    this.color = new Color();
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "view", tablevel);
+    }
+}
+
+function Rect() {
+    this.key = "frame";
+    this.x = "0.0";
+    this.y = "0.0";
+    this.width = "600";
+    this.height = "600";
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "rect", tablevel);
+    }
+}
+
+function AutoresizeMask() {
+    this.key="autoresizingMask";
+    this.widthSizable = "YES";
+    this.heightSizable = "YES";
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "autoresizingMask", tablevel);
+    }
+}
+
+function Animations(){
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "animations", tablevel);
+    }
+}
+
+function Color() {
+    this.key = "backgroundColor";
+    this.white = "1";
+    this.alpha = "1";
+    this.colorSpace = "calibratedWhite";
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "color", tablevel);
+    }
+}
+
 function ViewControllerLayoutGuide(type) {
     this.type = type;
-    this.id = generateID();
+    this.ID = generateID();
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "viewControllerLayoutGuide", tablevel);
@@ -69,8 +122,9 @@ function ViewControllerLayoutGuide(type) {
 
 function Placeholder() {
     this.placeholderIdentifier = "IBFirstResponder";
-    this.id = generateID();
+    this.ID = generateID();
     this.sceneMemberID = "firstResponder";
+    this.userLabel = "First Responder";
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "placeholder", tablevel);
@@ -114,7 +168,13 @@ function writeAttributes(obj) {
                 
                 if( Object.prototype.toString.call( obj[property] ) != '[object Array]'
                   && Object.prototype.toString.call( obj[property] ) != '[object Object]') {
-                    result += " " + property + "=\"" + obj[property] + "\"";    
+                    if (property == "ID") {
+                        result += " " + "id" + "=\"" + obj[property] + "\"";    
+                    }
+                    else {
+                        result += " " + property + "=\"" + obj[property] + "\"";        
+                    }
+                    
                 }
                 else {
                     //log(property + "is array");
@@ -153,9 +213,10 @@ function writeXmlObject(obj, name, tablevel) {
                         result += ">\n";
                         hasChildren = true;
                     }
-                    result += tablevel + _tab + "<" + property;
-                    result += writeAttributes(obj[property]);
-                    result += "/>\n";
+                    result += obj[property].writeXml(tablevel + _tab);
+                    //result += tablevel + _tab + "<" + property;
+                    //result += writeAttributes(obj[property]);
+                    //result += "/>\n";
                 }
                 
             }
@@ -167,18 +228,6 @@ function writeXmlObject(obj, name, tablevel) {
     else {
         result += "/>\n";
     }
-    /*
-    if (obj.content && obj.content.length > 0) {
-        result += ">\n";
-        for(var i=0; i<obj.content.length; i++) {
-            result += obj.content[i].writeXml(tablevel + _tab);
-        }
-        result += tablevel + "</" + name + ">\n";
-    }
-    else {
-        result += "/>\n";
-    }
-    */
 
     return result;
 }
