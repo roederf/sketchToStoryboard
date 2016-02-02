@@ -5,13 +5,13 @@
       "script" : "script.js",
       "handler" : "onRun",
       "shortcut" : "",
-      "name" : "prototypeStoryboard",
-      "identifier" : "prototypestoryboard"
+      "name" : "Export",
+      "identifier" : "exportstoryboard"
     }
   ],
   "menu" : {
     "items" : [
-      "prototypestoryboard"
+      "exportstoryboard"
     ],
     "title" : "PrototypeStoryboard"
   },

@@ -12,6 +12,8 @@
 
 
 var _tab = "    ";
+var _Button = "Button:";
+var _ImageView = "ImageView:";
 
 function Storyboard() {
     this.type = "com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB";
@@ -191,10 +193,50 @@ function ImageView(imgName, x, y, width, height) {
     }
 }
 
+function Button(imgName, x, y, width, height) {
+    this.opaque = "NO";
+    this.contentMode = "scaleToFill";
+    this.fixedFrame = "YES";
+    this.contentHorizontalAlignment="center";
+    this.contentVerticalAlignment="center";
+    this.lineBreakMode="middleTruncation"; 
+    this.translatesAutoresizingMaskIntoConstraints="NO";
+    this.ID=generateID();
+    
+    this.rect = new Rect(x,y,width,height);
+    this.state = new ButtonState(imgName);
+    this.connections = [];
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "button", tablevel);
+    }
+}
+
+function ButtonState(img) {
+    this.key="normal";
+    this.image = img;
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "state", tablevel);
+    }
+}
+
+function Segue(destID) {
+    this.destination=destID;
+    this.kind="show";
+    this.ID=generateID();
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "segue", tablevel);
+    }
+}
+
 // ------ //
 
 function StoryboardExport(doc) {
     this.assetSlices = [];
+    this.links = {};
+    this.viewControllers = {};
     
     var getScreenByWidthAndHeight = function(width, height) {
         if (width == 320 && height == 568) {
@@ -212,14 +254,16 @@ function StoryboardExport(doc) {
     while (artboard = artboards.nextObject()) {
         var artboardName = artboard.name().trim();
         log(artboardName);
-        this.assetSlices.push(artboard);
-                
+        
         var scene = new Scene();
         scene.point = new Point(artboard.frame().x(), artboard.frame().y());
         var viewCtrl = new ViewController("ViewController");
         scene.objects.push(viewCtrl);
         scene.objects.push(new Placeholder());
         this.storyboard.scenes.push(scene);
+        viewCtrl.view.subviews = [];
+        // collect all view controllers by name
+        this.viewControllers[artboardName] = viewCtrl;
         
         // just select the first artboard as inital view
         if (!initalViewControllerDefined) {
@@ -227,17 +271,53 @@ function StoryboardExport(doc) {
             initalViewControllerDefined = true;
         }
         
+        // determine screen type and size
         var screenType = getScreenByWidthAndHeight(artboard.frame().width(), artboard.frame().height());
         if (screenType) {
             viewCtrl.simulatedScreenMetrics = new SimulatedScreenMetrics(screenType);
             viewCtrl.view.rect = new Rect(0, 0, artboard.frame().width(), artboard.frame().height());
         }
         
-        // add imageview
-        viewCtrl.view.subviews = [];
-        viewCtrl.view.subviews.push( new ImageView(artboardName, viewCtrl.view.rect.x, viewCtrl.view.rect.y, viewCtrl.view.rect.width, viewCtrl.view.rect.height) );
+        var layers = artboard.children().objectEnumerator();
+        while (layer = layers.nextObject()) {
+            var name = layer.name();
+            if (name.startsWith(_Button)) {
+                
+                this.assetSlices.push(layer);
+                
+                var btn = new Button(name, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height());
+                viewCtrl.view.subviews.push( btn );
+                this.storyboard.resources.push( new Image(name, layer.frame().width(), layer.frame().height()) );
+                
+                var linkTarget = name.substr(_Button.length);
+                if (linkTarget) {
+                    
+                    // collect all buttons by link target
+                    this.links[linkTarget] = btn;
+                }
+                
+            }
+            else if (name.startsWith(_ImageView)) {
+                var imageName = name; //.substr(_ImageView.length);
+                this.assetSlices.push(layer);
+                
+                // add imageview
+                viewCtrl.view.subviews.push( new ImageView(imageName, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height()) );
+
+                this.storyboard.resources.push( new Image(imageName, layer.frame().width(), layer.frame().height()) );
+            }
+        }
         
-        this.storyboard.resources.push( new Image(artboardName, artboard.frame().width(), artboard.frame().height()) );
+    }
+    
+    // resolve links:
+    for (var property in this.links) {
+        var viewCtrl = this.viewControllers[property];
+        if (viewCtrl) {
+            var btn = this.links[property];
+            btn.connections.push( new Segue( viewCtrl.ID ) );
+            log ("connected to:" + property); 
+        }
     }
         
     var saveTextToFile = function(filename, text) {
@@ -282,11 +362,12 @@ function StoryboardExport(doc) {
         // export images with scale @1x
         for(var i=0; i<this.assetSlices.length; i++) {
             var slice = this.assetSlices[i];
-            var imageDir = directory + '/Assets.xcassets/' + slice.name() + '.imageset/';
-            var imageFilename = slice.name() + '@1x.png';
+            var imageName = slice.name();
+            var imageDir = directory + '/Assets.xcassets/' + imageName + '.imageset/';
+            var imageFilename = imageName + '@1x.png';
             
             [document saveArtboardOrSlice:slice toFile:imageDir + imageFilename];
-            
+            log("exporting image: " + imageFilename);
             // only 1x for now
             image_set.images[0].filename = imageFilename;
             text = JSON.stringify(image_set);

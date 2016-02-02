@@ -1,9 +1,24 @@
 @import 'storyboard.js'
+/*
+var onPrepare = function(content)
+{
+    var document = context.document;
+    var plugin = context.plugin;
+    var command = context.command;
+    
+    var artboards = document.currentPage().artboards().objectEnumerator();
+    while (artboard = artboards.nextObject()) {
+        
+        [command setValue:artboard.name() forKey:"View" onLayer:artboard];
+    }
+}
+*/
 
-var onRun = function(context) 
+var onRun = function(context)
 {
     var documentName = context.document.displayName();
     var plugin = context.plugin;
+    //var command = context.command;
     
     var fileURL = fileSaver();
     var directory = fileURL.path();
