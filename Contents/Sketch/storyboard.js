@@ -13,6 +13,7 @@ var _tab = "    ";
 var _Button = "Button:";
 var _ImageView = "ImageView:";
 var _sep = "_";
+var _unwindAction = "unwind:";
 
 function Storyboard() {
     this.type = "com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB";
@@ -220,13 +221,26 @@ function ButtonState(img) {
     }
 }
 
-function Segue(destID) {
+function Segue(destID, kind) {
     this.destination=destID;
-    this.kind="show";
+    this.kind=kind; // {"show", "unwind"}
+    if (kind=="unwind") {
+        this.unwindAction = _unwindAction;
+    }
     this.ID=generateID();
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "segue", tablevel);
+    }
+}
+
+function Exit() {
+    this.ID = generateID();
+    this.userLabel="Exit";
+    this.sceneMemberID="exit";
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "exit", tablevel);
     }
 }
 
@@ -280,6 +294,8 @@ function StoryboardExport(doc) {
         var layers = artboard.children().objectEnumerator();
         while (layer = layers.nextObject()) {
             var name = layer.name();
+            //log(name);
+            
             if (name.startsWith(_Button)) {
                 
                 this.assetSlices.push({
@@ -288,33 +304,41 @@ function StoryboardExport(doc) {
                 });
                 
                 var btn = new Button(artboardName + _sep + name, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height());
+                log("btn" + name +" x:" + layer.frame().x() + ", y: " + layer.frame().y());
                 viewCtrl.view.subviews.push( btn );
                 this.storyboard.resources.push( new Image(artboardName + _sep + name, layer.frame().width(), layer.frame().height()) );
                 
                 var linkTarget = name.substr(_Button.length);
                 if (linkTarget) {
-                    
-                    // collect all connections
-                    this.links.push({
+                    if (linkTarget == "Exit") {
+                        var exit = new Exit();
+                        scene.objects.push(exit);
+                        btn.connections.push( new Segue( exit.ID, "unwind" ) );
+                    }
+                    else {
+                        this.links.push({
                         viewController: viewCtrl,
                         button: btn,
                         target: linkTarget
-                    });
+                        });    
+                    }
+                    
                 }
                 
             }
             else if (name.startsWith(_ImageView)) {
-                var imageName = name; //.substr(_ImageView.length);
+                
                 this.assetSlices.push({
                     layer: layer,
                     artboardName: artboardName
                 });
                 
                 // add imageview
-                viewCtrl.view.subviews.push( new ImageView(artboardName + _sep + imageName, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height()) );
+                viewCtrl.view.subviews.push( new ImageView(artboardName + _sep + name, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height()) );
 
-                this.storyboard.resources.push( new Image(artboardName + _sep + imageName, layer.frame().width(), layer.frame().height()) );
+                this.storyboard.resources.push( new Image(artboardName + _sep + name, layer.frame().width(), layer.frame().height()) );
             }
+            
         }
         
     }
@@ -325,7 +349,7 @@ function StoryboardExport(doc) {
         var viewCtrl = this.viewControllers[link.target];
         if (viewCtrl) {
             var btn = link.button;
-            btn.connections.push( new Segue( viewCtrl.ID ) );
+            btn.connections.push( new Segue( viewCtrl.ID, "show" ) );
             log ("connected to:" + link.target); 
         }
     }
@@ -341,6 +365,15 @@ function StoryboardExport(doc) {
         [fileManager createDirectoryAtPath:name withIntermediateDirectories:true attributes:nil error:nil];
     };
     
+    var createAsset = function(document, layer, dir, imageName, ext, scale) {
+        var imageFilename = imageName + ext + '.png';
+        rect = [[layer absoluteRect] rect];
+        slice = [MSExportRequest requestWithRect:rect scale:scale];
+        [document saveArtboardOrSlice:slice toFile:dir + imageFilename];
+
+        return imageFilename;
+    };
+        
     this.export = function(directory, filename, document) {
         
         var image_set = {
@@ -371,23 +404,13 @@ function StoryboardExport(doc) {
         
         // export images with scale @1x
         for(var i=0; i<this.assetSlices.length; i++) {
-            var sliceObject = this.assetSlices[i];
-            var slice = sliceObject.layer;
-            
-            var imageName = sliceObject.artboardName + _sep + slice.name();
+            var asset = this.assetSlices[i];
+            var layer = asset.layer;
+            var imageName = asset.artboardName + _sep + layer.name();
             var imageDir = directory + '/Assets.xcassets/' + imageName + '.imageset/';
-            var imageFilename = imageName + '@1x.png';
-            
-            [document saveArtboardOrSlice:slice toFile:imageDir + imageFilename];
-            log("exporting image: " + imageFilename);
-            image_set.images[0].filename = imageFilename;
-            
-            var rect = [[slice absoluteRect] rect];
-            
-            slice = [MSExportRequest requestWithRect:rect scale:2.0];
-            var imageFilename = imageName + '@2x.png';
-            [document saveArtboardOrSlice:slice toFile:imageDir + imageFilename];
-            image_set.images[1].filename = imageFilename;
+                        
+            image_set.images[0].filename = createAsset(document, layer, imageDir, imageName, '@1x', 1.0);
+            image_set.images[1].filename = createAsset(document, layer, imageDir, imageName, '@2x', 2.0);
             
             text = JSON.stringify(image_set);
         
