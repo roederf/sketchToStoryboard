@@ -373,14 +373,22 @@ function StoryboardExport(doc) {
         for(var i=0; i<this.assetSlices.length; i++) {
             var sliceObject = this.assetSlices[i];
             var slice = sliceObject.layer;
+            
             var imageName = sliceObject.artboardName + _sep + slice.name();
             var imageDir = directory + '/Assets.xcassets/' + imageName + '.imageset/';
             var imageFilename = imageName + '@1x.png';
             
             [document saveArtboardOrSlice:slice toFile:imageDir + imageFilename];
             log("exporting image: " + imageFilename);
-            // only 1x for now
             image_set.images[0].filename = imageFilename;
+            
+            var rect = [[slice absoluteRect] rect];
+            
+            slice = [MSExportRequest requestWithRect:rect scale:2.0];
+            var imageFilename = imageName + '@2x.png';
+            [document saveArtboardOrSlice:slice toFile:imageDir + imageFilename];
+            image_set.images[1].filename = imageFilename;
+            
             text = JSON.stringify(image_set);
         
             filename = imageDir + 'Contents.json';
