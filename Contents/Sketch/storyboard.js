@@ -1,8 +1,6 @@
 @import 'helper.js'
 
 // todo:
-// initial ViewController
-// add Button + transition instead of imageview
 // create 2x and 3x assets
 // define name conventions to slice artboard into UI Elements
 // add support for several screen sizes
@@ -14,6 +12,7 @@
 var _tab = "    ";
 var _Button = "Button:";
 var _ImageView = "ImageView:";
+var _sep = "_";
 
 function Storyboard() {
     this.type = "com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB";
@@ -235,7 +234,7 @@ function Segue(destID) {
 
 function StoryboardExport(doc) {
     this.assetSlices = [];
-    this.links = {};
+    this.links = [];
     this.viewControllers = {};
     
     var getScreenByWidthAndHeight = function(width, height) {
@@ -283,40 +282,51 @@ function StoryboardExport(doc) {
             var name = layer.name();
             if (name.startsWith(_Button)) {
                 
-                this.assetSlices.push(layer);
+                this.assetSlices.push({
+                    layer: layer,
+                    artboardName: artboardName
+                });
                 
-                var btn = new Button(name, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height());
+                var btn = new Button(artboardName + _sep + name, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height());
                 viewCtrl.view.subviews.push( btn );
-                this.storyboard.resources.push( new Image(name, layer.frame().width(), layer.frame().height()) );
+                this.storyboard.resources.push( new Image(artboardName + _sep + name, layer.frame().width(), layer.frame().height()) );
                 
                 var linkTarget = name.substr(_Button.length);
                 if (linkTarget) {
                     
-                    // collect all buttons by link target
-                    this.links[linkTarget] = btn;
+                    // collect all connections
+                    this.links.push({
+                        viewController: viewCtrl,
+                        button: btn,
+                        target: linkTarget
+                    });
                 }
                 
             }
             else if (name.startsWith(_ImageView)) {
                 var imageName = name; //.substr(_ImageView.length);
-                this.assetSlices.push(layer);
+                this.assetSlices.push({
+                    layer: layer,
+                    artboardName: artboardName
+                });
                 
                 // add imageview
-                viewCtrl.view.subviews.push( new ImageView(imageName, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height()) );
+                viewCtrl.view.subviews.push( new ImageView(artboardName + _sep + imageName, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height()) );
 
-                this.storyboard.resources.push( new Image(imageName, layer.frame().width(), layer.frame().height()) );
+                this.storyboard.resources.push( new Image(artboardName + _sep + imageName, layer.frame().width(), layer.frame().height()) );
             }
         }
         
     }
     
     // resolve links:
-    for (var property in this.links) {
-        var viewCtrl = this.viewControllers[property];
+    for (var i=0; i<this.links.length; i++) {
+        var link = this.links[i];
+        var viewCtrl = this.viewControllers[link.target];
         if (viewCtrl) {
-            var btn = this.links[property];
+            var btn = link.button;
             btn.connections.push( new Segue( viewCtrl.ID ) );
-            log ("connected to:" + property); 
+            log ("connected to:" + link.target); 
         }
     }
         
@@ -361,8 +371,9 @@ function StoryboardExport(doc) {
         
         // export images with scale @1x
         for(var i=0; i<this.assetSlices.length; i++) {
-            var slice = this.assetSlices[i];
-            var imageName = slice.name();
+            var sliceObject = this.assetSlices[i];
+            var slice = sliceObject.layer;
+            var imageName = sliceObject.artboardName + _sep + slice.name();
             var imageDir = directory + '/Assets.xcassets/' + imageName + '.imageset/';
             var imageFilename = imageName + '@1x.png';
             
