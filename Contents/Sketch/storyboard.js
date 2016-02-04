@@ -9,14 +9,16 @@
 // export Button ( with Image )
 // export default "show" transition
 // export default "exit" transition
+// export shapes as customView (fill, bordercolor, thickness, radius)
+// export text as label and textview (system font only)
 
 // todo:
-// export shapes as customView
-// export text as label
 // export predefined transitions
 // use selection for export
 // add support for several screen sizes?
 // export assets as vector (pdf?)
+// more stable for shapes
+// font color and spacing needed
 
 
 var _tab = "    ";
@@ -335,12 +337,7 @@ function StoryboardExport(doc) {
             else if (name.startsWith(_TextView)) {
                 var frame = layer.frame();
                 //var color = new RGBColor(layer.textColor().red(), layer.textColor().green(), layer.textColor().blue(), layer.textColor().alpha());
-                
-                log(layer.fontPostscriptName());
-                log(layer.textAlignment());
-                log(layer.characterSpacing());
-                log(layer.lineSpacing());
-                
+                                
                 var textview = new TextView(layer.stringValue(), frame.x(), frame.y(), frame.width(), frame.height(), new FontDescription(layer.fontSize()));
                 viewCtrl.view.subviews.push(textview);
             }
@@ -355,16 +352,13 @@ function StoryboardExport(doc) {
                     }
                 }
                     
-                log ("found custom view:");
+                //log ("found custom view:");
                 var customView = new CustomView(frame.x(),frame.y(),frame.width(),frame.height());
                 
-                //log(style.fills().count());
-                //log(style.borders().count());
                 var fills = style.fills();
                 if (fills.count() > 0){
                     var fill = fills.array().firstObject();
                     if (fill != null) {
-                        //log(fill.color().hexValue());
                         customView.setBackground(new RGBColor(fill.color().red(),fill.color().green(),fill.color().blue(),1.0));
                     }
                 }
@@ -375,7 +369,6 @@ function StoryboardExport(doc) {
                         customView.setBorder(new RGBColor(border.color().red(), border.color().green(), border.color().blue(), border.color().alpha()), border.thickness(), radius);
                     }
                 }
-                
                 
                 viewCtrl.view.subviews.push(customView);
             }
