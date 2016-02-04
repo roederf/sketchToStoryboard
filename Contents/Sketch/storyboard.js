@@ -12,6 +12,7 @@
 var _tab = "    ";
 var _Button = "Button:";
 var _ImageView = "ImageView:";
+var _Label = "Label:";
 var _sep = "_";
 var _unwindAction = "unwind:";
 
@@ -121,9 +122,22 @@ function Color() {
     this.white = "1";
     this.alpha = "1";
     this.colorSpace = "calibratedWhite";
-    
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "color", tablevel);
+        
+    }
+}
+
+function RGBColor(r,g,b,a){
+    this.key = "backgroundColor";
+    this.red = r;
+    this.green = g;
+    this.blue = b;
+    this.alpha = a;
+    this.colorSpace = "calibratedRGB";
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "color", tablevel);
+        
     }
 }
 
@@ -221,6 +235,49 @@ function ButtonState(img) {
     }
 }
 
+function Label(text, x,y, width, height) {
+    this.opaque="NO";
+    this.userInteractionEnabled="NO";
+    this.contentMode="left";
+    this.horizontalHuggingPriority="251";
+    this.verticalHuggingPriority="251";
+    this.fixedFrame="YES";
+    this.text=text;
+    this.textAlignment="natural";
+    this.lineBreakMode="tailTruncation";
+    this.baselineAdjustment="alignBaselines";
+    this.adjustsFontSizeToFit="NO"
+    this.translatesAutoresizingMaskIntoConstraints="NO";
+    this.ID=generateID();
+    
+    this.rect = new Rect(x,y,width,height);
+    this.fontDescription = new FontDescription();
+    this.color = new Color();
+    this.color.key = "textColor";
+    this.color.cocoaTouchSystemColor = "darkTextColor";
+    this.nil = new Nil();
+
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "label", tablevel);
+    }
+}
+
+function FontDescription(size) {
+    this.key = "fontDescription";
+    this.type = "system";
+    this.pointSize = size;
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "fontDescription", tablevel);
+    }
+}
+
+function Nil(){
+    this.key = "highlightedColor";
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "nil", tablevel);
+    }
+}
+
 function Segue(destID, kind) {
     this.destination=destID;
     this.kind=kind; // {"show", "unwind"}
@@ -242,6 +299,45 @@ function Exit() {
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "exit", tablevel);
     }
+}
+
+function Attribute(type, keyPath, value) {
+    this.type = type;
+    this.keyPath = keyPath;
+    this.value = value;
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "userDefinedRuntimeAttribute", tablevel);
+    }
+}
+
+function Real(value) {
+    this.key="value";
+    this.value = value;
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "real", tablevel);
+    }
+}
+
+function CustomView(x,y,width,height, borderColor, borderWidth, cornerRadius) {
+    this.contentMode="scaleToFill";
+    this.fixedFrame="YES"; 
+    this.translatesAutoresizingMaskIntoConstraints="NO";
+    this.ID=generateID();
+    this.customClass="CustomView";
+    this.customModuleProvider="target";
+    
+    this.rect = new Rect(x,y,width,height);
+    this.color = new Color();
+    this.userDefinedRuntimeAttributes = [];
+    this.userDefinedRuntimeAttributes.push(new Attribute("color", "borderColor", borderColor));
+    this.userDefinedRuntimeAttributes.push(new Attribute("number", "cornerRadius", new Real(cornerRadius)));
+    this.userDefinedRuntimeAttributes.push(new Attribute("number, borderWidth", new Real(borderWidth)));
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "view", tablevel);
+    }
+
 }
 
 // ------ //
@@ -295,8 +391,17 @@ function StoryboardExport(doc) {
         while (layer = layers.nextObject()) {
             var name = layer.name();
             //log(name);
-            
-            if (name.startsWith(_Button)) {
+            if (name.startsWith(_Label)) {
+                log(name);
+                log(layer.stringValue());
+                log(layer.fontSize());
+                log(layer.fontPostscriptName());
+                log(layer.textColor());
+                
+                var label = new Label(layer.stringValue(), layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height());
+                viewCtrl.view.subviews.push( label );
+            }
+            else if (name.startsWith(_Button)) {
                 
                 this.assetSlices.push({
                     layer: layer,
