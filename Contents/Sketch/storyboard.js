@@ -1,11 +1,21 @@
 @import 'helper.js'
+@import 'primitives.js'
+
+// Features:
+// Export Artboard as ViewController + View
+// Define First Artboard as Initial ViewController
+// Export 1x,2x Assets
+// export ImageView
+// export Button ( with Image )
+// export default "show" transition
+// export default "exit" transition
 
 // todo:
-// create 2x and 3x assets
-// define name conventions to slice artboard into UI Elements
-// add support for several screen sizes
-// convert text as text
-// convert simple shapes into views without use of bitmaps?
+// export shapes as customView
+// export text as label
+// export predefined transitions
+// use selection for export
+// add support for several screen sizes?
 // export assets as vector (pdf?)
 
 
@@ -13,6 +23,8 @@ var _tab = "    ";
 var _Button = "Button:";
 var _ImageView = "ImageView:";
 var _Label = "Label:";
+var _TextView = "TextView:";
+var _CustomView = "CustomView:";
 var _sep = "_";
 var _unwindAction = "unwind:";
 
@@ -89,73 +101,12 @@ function View() {
     }
 }
 
-function Rect(x,y,width,height) {
-    this.key = "frame";
-    this.x = "" + x;
-    this.y = "" + y;
-    this.width = "" + width;
-    this.height = "" + height;
-    
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "rect", tablevel);
-    }
-}
-
-function AutoresizeMask() {
-    this.key="autoresizingMask";
-    this.widthSizable = "YES";
-    this.heightSizable = "YES";
-    
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "autoresizingMask", tablevel);
-    }
-}
-
-function Animations(){
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "animations", tablevel);
-    }
-}
-
-function Color() {
-    this.key = "backgroundColor";
-    this.white = "1";
-    this.alpha = "1";
-    this.colorSpace = "calibratedWhite";
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "color", tablevel);
-        
-    }
-}
-
-function RGBColor(r,g,b,a){
-    this.key = "backgroundColor";
-    this.red = r;
-    this.green = g;
-    this.blue = b;
-    this.alpha = a;
-    this.colorSpace = "calibratedRGB";
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "color", tablevel);
-        
-    }
-}
-
 function ViewControllerLayoutGuide(type) {
     this.type = type;
     this.ID = generateID();
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "viewControllerLayoutGuide", tablevel);
-    }
-}
-
-function SimulatedScreenMetrics(type) {
-    this.key = "simulatedDestinationMetrics";
-    this.type = type;
-    
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "simulatedScreenMetrics", tablevel);
     }
 }
 
@@ -167,16 +118,6 @@ function Placeholder() {
     
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "placeholder", tablevel);
-    }
-}
-
-function Point(x,y) {
-    this.key = "canvasLocation";
-    this.x = "" + x;
-    this.y = "" + y;
-    
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "point", tablevel);
     }
 }
 
@@ -226,15 +167,6 @@ function Button(imgName, x, y, width, height) {
     }
 }
 
-function ButtonState(img) {
-    this.key="normal";
-    this.image = img;
-    
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "state", tablevel);
-    }
-}
-
 function Label(text, x,y, width, height) {
     this.opaque="NO";
     this.userInteractionEnabled="NO";
@@ -248,10 +180,11 @@ function Label(text, x,y, width, height) {
     this.baselineAdjustment="alignBaselines";
     this.adjustsFontSizeToFit="NO"
     this.translatesAutoresizingMaskIntoConstraints="NO";
+    this.numberOfLines="1";
     this.ID=generateID();
     
     this.rect = new Rect(x,y,width,height);
-    this.fontDescription = new FontDescription();
+    this.fontDescription = new FontDescription(17, "system");
     this.color = new Color();
     this.color.key = "textColor";
     this.color.cocoaTouchSystemColor = "darkTextColor";
@@ -262,20 +195,28 @@ function Label(text, x,y, width, height) {
     }
 }
 
-function FontDescription(size) {
-    this.key = "fontDescription";
-    this.type = "system";
-    this.pointSize = size;
+function TextView(text, x,y,width,height, font) {
+    this.clipsSubviews="YES";
+    this.multipleTouchEnabled="YES"; 
+    this.contentMode="scaleToFill";
+    this.fixedFrame="YES";
+    this.editable="NO";
+    this.text=text;
+    this.textAlignment="natural";
+    this.selectable="NO";
+    this.translatesAutoresizingMaskIntoConstraints="NO";
+    this.ID = generateID();
+    
+    this.rect = new Rect(x,y,width,height);
+    this.animations = new Animations();
+    this.color = new Color();
+    this.fontDescription = font;
+    this.textInputTraits = new TextInputTraits();
+                                
     this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "fontDescription", tablevel);
+        return writeXmlObject(this, "textView", tablevel);
     }
-}
-
-function Nil(){
-    this.key = "highlightedColor";
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "nil", tablevel);
-    }
+    
 }
 
 function Segue(destID, kind) {
@@ -301,24 +242,6 @@ function Exit() {
     }
 }
 
-function Attribute(type, keyPath, value) {
-    this.type = type;
-    this.keyPath = keyPath;
-    this.value = value;
-    
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "userDefinedRuntimeAttribute", tablevel);
-    }
-}
-
-function Real(value) {
-    this.key="value";
-    this.value = value;
-    this.writeXml = function(tablevel) {
-        return writeXmlObject(this, "real", tablevel);
-    }
-}
-
 function CustomView(x,y,width,height, borderColor, borderWidth, cornerRadius) {
     this.contentMode="scaleToFill";
     this.fixedFrame="YES"; 
@@ -328,12 +251,20 @@ function CustomView(x,y,width,height, borderColor, borderWidth, cornerRadius) {
     this.customModuleProvider="target";
     
     this.rect = new Rect(x,y,width,height);
-    this.color = new Color();
-    this.userDefinedRuntimeAttributes = [];
-    this.userDefinedRuntimeAttributes.push(new Attribute("color", "borderColor", borderColor));
-    this.userDefinedRuntimeAttributes.push(new Attribute("number", "cornerRadius", new Real(cornerRadius)));
-    this.userDefinedRuntimeAttributes.push(new Attribute("number, borderWidth", new Real(borderWidth)));
+    this.color = new Color();   // default is white    
     
+    this.setBackground = function(color){
+        this.color = color;
+    }
+    
+    this.setBorder = function(color, thickness, radius){
+        this.userDefinedRuntimeAttributes = [];
+        color.key = "value";
+        this.userDefinedRuntimeAttributes.push(new Attribute("color", "borderColor", color));
+        this.userDefinedRuntimeAttributes.push(new Attribute("number", "borderWidth", new Real(thickness)));
+        this.userDefinedRuntimeAttributes.push(new Attribute("number", "cornerRadius", new Real(radius)));
+    }
+        
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "view", tablevel);
     }
@@ -393,13 +324,60 @@ function StoryboardExport(doc) {
             //log(name);
             if (name.startsWith(_Label)) {
                 log(name);
-                log(layer.stringValue());
-                log(layer.fontSize());
-                log(layer.fontPostscriptName());
-                log(layer.textColor());
+                //log(layer.stringValue());
+                //log(layer.fontSize());
+                //log(layer.fontPostscriptName());
+                //log(layer.textColor());
                 
                 var label = new Label(layer.stringValue(), layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height());
                 viewCtrl.view.subviews.push( label );
+            }
+            else if (name.startsWith(_TextView)) {
+                var frame = layer.frame();
+                //var color = new RGBColor(layer.textColor().red(), layer.textColor().green(), layer.textColor().blue(), layer.textColor().alpha());
+                
+                log(layer.fontPostscriptName());
+                log(layer.textAlignment());
+                log(layer.characterSpacing());
+                log(layer.lineSpacing());
+                
+                var textview = new TextView(layer.stringValue(), frame.x(), frame.y(), frame.width(), frame.height(), new FontDescription(layer.fontSize()));
+                viewCtrl.view.subviews.push(textview);
+            }
+            else if (name.startsWith(_CustomView)) {
+                var frame = layer.frame();
+                var style = layer.style();
+                var radius = 0.0;
+                if(layer.isKindOfClass(MSShapeGroup)) {
+                    var shape=layer.layers().firstObject();
+                    if(shape && shape.isKindOfClass(MSRectangleShape)) {
+                        radius=shape.cornerRadiusFloat();
+                    }
+                }
+                    
+                log ("found custom view:");
+                var customView = new CustomView(frame.x(),frame.y(),frame.width(),frame.height());
+                
+                //log(style.fills().count());
+                //log(style.borders().count());
+                var fills = style.fills();
+                if (fills.count() > 0){
+                    var fill = fills.array().firstObject();
+                    if (fill != null) {
+                        //log(fill.color().hexValue());
+                        customView.setBackground(new RGBColor(fill.color().red(),fill.color().green(),fill.color().blue(),1.0));
+                    }
+                }
+                var borders = style.borders();
+                if (borders.count() > 0){
+                    var border = borders.array().firstObject();
+                    if (border != null) {
+                        customView.setBorder(new RGBColor(border.color().red(), border.color().green(), border.color().blue(), border.color().alpha()), border.thickness(), radius);
+                    }
+                }
+                
+                
+                viewCtrl.view.subviews.push(customView);
             }
             else if (name.startsWith(_Button)) {
                 
