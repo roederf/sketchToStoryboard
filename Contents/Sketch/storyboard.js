@@ -11,14 +11,25 @@
 // export default "exit" transition
 // export shapes as customView (fill, bordercolor, thickness, radius)
 // export text as label and textview (system font only)
+// create reference target xcode project
+
+// Sketch Usage:
+// "ImageView:name" generates imageView with 1x,2x
+// "Button:artboardName" generates an button + image + transition to screen
+// "Button:Exit" generates button + unwind transition
+// "CustomView" generates a customView (fill, bordercolor, thickness, radius)
+// "Label" generates a label with system font (color, num lines missing)
+// "TextView" generates a textView with system font (color missing)
 
 // todo:
 // export predefined transitions
 // use selection for export
+// add gradient fill
+// add custom button
 // add support for several screen sizes?
 // export assets as vector (pdf?)
 // more stable for shapes
-// font color and spacing needed
+// fix for font color and spacing needed
 
 
 var _tab = "    ";
@@ -221,11 +232,15 @@ function TextView(text, x,y,width,height, font) {
     
 }
 
-function Segue(destID, kind) {
+function Segue(destID, kind, customClass) {
     this.destination=destID;
     this.kind=kind; // {"show", "unwind"}
     if (kind=="unwind") {
         this.unwindAction = _unwindAction;
+    }
+    if (customClass) {
+        this.customClass = customClass;
+        this.customModuleProvider="target";
     }
     this.ID=generateID();
     
@@ -379,24 +394,41 @@ function StoryboardExport(doc) {
                     artboardName: artboardName
                 });
                 
+                var linkTarget = null;
+                var transition = null;
+                var parts = name.split(':');
+                if (parts.length > 0) {
+                    linkTarget = parts[1];
+                }
+                if (parts.length > 1) {
+                    transition = parts[2];
+                }
+                
                 var btn = new Button(artboardName + _sep + name, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height());
-                log("btn" + name +" x:" + layer.frame().x() + ", y: " + layer.frame().y());
+                //log("btn" + name +" x:" + layer.frame().x() + ", y: " + layer.frame().y());
                 viewCtrl.view.subviews.push( btn );
                 this.storyboard.resources.push( new Image(artboardName + _sep + name, layer.frame().width(), layer.frame().height()) );
                 
-                var linkTarget = name.substr(_Button.length);
                 if (linkTarget) {
                     if (linkTarget == "Exit") {
                         var exit = new Exit();
                         scene.objects.push(exit);
-                        btn.connections.push( new Segue( exit.ID, "unwind" ) );
+                        if (transition) {
+                            btn.connections.push( new Segue( exit.ID, "unwind", transition + "Segue" ) );   
+                        }
+                        else {
+                            btn.connections.push( new Segue( exit.ID, "unwind" ) );   
+                        }
                     }
                     else {
+                        
                         this.links.push({
                         viewController: viewCtrl,
                         button: btn,
-                        target: linkTarget
-                        });    
+                        target: linkTarget,
+                        transition: transition
+                        }); 
+                          
                     }
                     
                 }
@@ -425,7 +457,12 @@ function StoryboardExport(doc) {
         var viewCtrl = this.viewControllers[link.target];
         if (viewCtrl) {
             var btn = link.button;
-            btn.connections.push( new Segue( viewCtrl.ID, "show" ) );
+            if (link.transition){
+                btn.connections.push( new Segue( viewCtrl.ID, "show", link.transition + "Segue" ) );   
+            }
+            else {
+                btn.connections.push( new Segue( viewCtrl.ID, "show" ) );   
+            }
             log ("connected to:" + link.target); 
         }
     }
