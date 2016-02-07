@@ -12,6 +12,7 @@
 // export shapes as customView (fill, bordercolor, thickness, radius)
 // export text as label and textview (system font only)
 // create reference target xcode project
+// export predefined transitions (name + Segue)
 
 // Sketch Usage:
 // "ImageView:name" generates imageView with 1x,2x
@@ -20,13 +21,14 @@
 // "CustomView" generates a customView (fill, bordercolor, thickness, radius)
 // "Label" generates a label with system font (color, num lines missing)
 // "TextView" generates a textView with system font (color missing)
+// "Button:Target:Transition adds a custom segue with given (name + Segue)
 
 // todo:
-// export predefined transitions
+// 
 // use selection for export
 // add gradient fill
-// add custom button
-// add support for several screen sizes?
+// add custom button (button.text, button.image)
+// add support for several screen sizes? Fluid sketch plugin?
 // export assets as vector (pdf?)
 // more stable for shapes
 // fix for font color and spacing needed
@@ -189,11 +191,11 @@ function Label(text, x,y, width, height) {
     this.fixedFrame="YES";
     this.text=text;
     this.textAlignment="natural";
-    this.lineBreakMode="tailTruncation";
+    this.lineBreakMode="wordWrap"; // "tailTruncation" would be default for simple labels
     this.baselineAdjustment="alignBaselines";
     this.adjustsFontSizeToFit="NO"
     this.translatesAutoresizingMaskIntoConstraints="NO";
-    this.numberOfLines="1";
+    this.numberOfLines="32";
     this.ID=generateID();
     
     this.rect = new Rect(x,y,width,height);
@@ -346,7 +348,7 @@ function StoryboardExport(doc) {
                 //log(layer.fontPostscriptName());
                 //log(layer.textColor());
                 
-                var label = new Label(layer.stringValue(), layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height());
+                var label = new Label(layer.stringValue(), layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height()+1);
                 viewCtrl.view.subviews.push( label );
             }
             else if (name.startsWith(_TextView)) {
