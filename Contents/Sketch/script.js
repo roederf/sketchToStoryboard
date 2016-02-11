@@ -1,4 +1,4 @@
-@import 'storyboard.js'
+@import 'export.js'
 /*
 var onPrepare = function(content)
 {
@@ -23,7 +23,7 @@ var onRun = function(context)
     var fileURL = fileSaver();
     var directory = fileURL.path();
     var filename = fileURL.path() + '/Main.storyboard';
-        
+    var document = context.document;
     //var selectedLayers = context.selection;
     //var selectedCount = selectedLayers.count();
     
@@ -31,21 +31,6 @@ var onRun = function(context)
     //    var selectedLayers = context.document.currentPage().layers();
     //} 
     
-    if (writeDocument(directory, filename, context.document)) {
-        showMessage("Storyboard created.");
-    }
-    else {
-        showMessage("Export failed.");
-    }
-    
-};
-
-function showMessage(msg) {
-    var app = [NSApplication sharedApplication];
-    [app displayDialog:msg withTitle:"Message"];
-}
-
-function writeDocument(directory, filename, document) {
     log("Writing document: " + filename);
     
     //var templateUrl = plugin.urlForResourceNamed("main.storyboard");
@@ -53,12 +38,18 @@ function writeDocument(directory, filename, document) {
         
     //text += readTextFromFile(templateUrl);
     
-    var storyboardExport = new StoryboardExport(document);
-    storyboardExport.export(directory, filename, document);
+    var storyboardExport = new StoryboardExport(context);
+    storyboardExport.createStoryboard();
+    storyboardExport.export(directory, filename);
     
-    log("Success.");
+    log("success.");
     
-    return true;
+    showMessage("Storyboard created.");
+};
+
+function showMessage(msg) {
+    var app = [NSApplication sharedApplication];
+    [app displayDialog:msg withTitle:"Message"];
 }
 
 function createFolder(name) {
