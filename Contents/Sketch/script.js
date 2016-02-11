@@ -22,7 +22,7 @@ var onRun = function(context)
     
     var fileURL = fileSaver();
     var directory = fileURL.path();
-    var filename = fileURL.path() + '/Export.storyboard';
+    var filename = fileURL.path() + '/Main.storyboard';
     
     log("Writing document: " + filename);
     
