@@ -13,6 +13,7 @@
 // create reference target xcode project
 // export predefined transitions (name + Segue)
 // no selection: export all; nothing selected: export selected artboards only
+// added support for several screen sizes
 
 // Sketch Usage:
 // "ImageView:name" generates imageView with 1x,2x
@@ -25,9 +26,10 @@
 
 // todo:
 // 
+// how to support universal screen sizes?
 // add gradient fill
 // add custom button (button.text, button.image)
-// add support for several screen sizes? support for Fluid sketch plugin?
+// support for Fluid sketch plugin?
 // export assets as vector (pdf?)
 // more stable for shapes
 // fix for font color and spacing needed
