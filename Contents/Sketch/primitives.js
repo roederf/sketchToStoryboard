@@ -114,6 +114,15 @@ function SimulatedScreenMetrics(type) {
     }
 }
 
+function SimulatedOrientationMetrics(orientation) {
+    this.key = "simulatedOrientationMetrics";
+    this.orientation = orientation;
+    
+    this.writeXml = function(tablevel) {
+        return writeXmlObject(this, "simulatedOrientationMetrics", tablevel);
+    }
+}
+
 function TextInputTraits() {
     this.key="textInputTraits";
     this.autocapitalizationType="sentences";

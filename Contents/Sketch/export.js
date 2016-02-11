@@ -12,6 +12,7 @@
 // export text as label and textview (system font only)
 // create reference target xcode project
 // export predefined transitions (name + Segue)
+// no selection: export all; nothing selected: export selected artboards only
 
 // Sketch Usage:
 // "ImageView:name" generates imageView with 1x,2x
@@ -24,10 +25,9 @@
 
 // todo:
 // 
-// use selection for export
 // add gradient fill
 // add custom button (button.text, button.image)
-// add support for several screen sizes? Fluid sketch plugin?
+// add support for several screen sizes? support for Fluid sketch plugin?
 // export assets as vector (pdf?)
 // more stable for shapes
 // fix for font color and spacing needed
@@ -54,6 +54,27 @@ function StoryboardExport(context) {
     var getScreenByWidthAndHeight = function(width, height) {
         if (width == 320 && height == 568) {
             return "retina4";
+        }
+        else if (width == 568 && height == 320) {
+            return "retina4";
+        }
+        else if (width == 375 && height == 667) {
+            return "retina47";
+        }
+        else if (width == 667 && height == 375) {
+            return "retina47";
+        }
+        else if (width == 414 && height == 736) {
+            return "retina55";
+        }
+        else if (width == 736 && height == 414) {
+            return "retina55";
+        }
+        else if (width == 768 && height == 1024) {
+            return "iPad";
+        }
+        else if (width == 1024 && height == 768) {
+            return "iPad";
         }
         else {
             return null;
@@ -84,7 +105,7 @@ function StoryboardExport(context) {
         
         var artboards = this.document.currentPage().artboards().objectEnumerator();
         
-        if (selection) {
+        if (selection && selection.count() > 0) {
             log(selection.count());
             artboards = selection.objectEnumerator();
         }
@@ -116,6 +137,11 @@ function StoryboardExport(context) {
             var screenType = getScreenByWidthAndHeight(artboard.frame().width(), artboard.frame().height());
             if (screenType) {
                 viewCtrl.simulatedScreenMetrics = new SimulatedScreenMetrics(screenType);
+                // check for landscape
+                if (artboard.frame().width() > artboard.frame().height()) {
+                    viewCtrl.simulatedOrientationMetrics = new SimulatedOrientationMetrics("landscapeRight");
+                }
+                
                 viewCtrl.view.rect = new Rect(0, 0, artboard.frame().width(), artboard.frame().height());
             }
 
