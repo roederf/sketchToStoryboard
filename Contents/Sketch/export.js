@@ -80,11 +80,18 @@ function StoryboardExport(context) {
         return imageFilename;
     };
     
-    this.createStoryboard = function(){
+    this.createStoryboard = function(selection){
+        
+        var artboards = this.document.currentPage().artboards().objectEnumerator();
+        
+        if (selection) {
+            log(selection.count());
+            artboards = selection.objectEnumerator();
+        }
         
         var initalViewControllerDefined = false;
         // for each artboard do create viewcontroller
-        var artboards = this.document.currentPage().artboards().objectEnumerator();
+        //var artboards = this.document.currentPage().artboards().objectEnumerator();
         while (artboard = artboards.nextObject()) {
             var artboardName = artboard.name().trim();
             log(artboardName);

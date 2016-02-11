@@ -22,14 +22,7 @@ var onRun = function(context)
     
     var fileURL = fileSaver();
     var directory = fileURL.path();
-    var filename = fileURL.path() + '/Main.storyboard';
-    var document = context.document;
-    //var selectedLayers = context.selection;
-    //var selectedCount = selectedLayers.count();
-    
-    //if (selectedCount == 0) {
-    //    var selectedLayers = context.document.currentPage().layers();
-    //} 
+    var filename = fileURL.path() + '/Export.storyboard';
     
     log("Writing document: " + filename);
     
@@ -39,7 +32,7 @@ var onRun = function(context)
     //text += readTextFromFile(templateUrl);
     
     var storyboardExport = new StoryboardExport(context);
-    storyboardExport.createStoryboard();
+    storyboardExport.createStoryboard(context.selection);
     storyboardExport.export(directory, filename);
     
     log("success.");
