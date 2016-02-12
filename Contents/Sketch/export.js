@@ -14,6 +14,7 @@
 // export predefined transitions (name + Segue)
 // no selection: export all; nothing selected: export selected artboards only
 // added support for several screen sizes
+// artboard name as scene name
 
 // Sketch Usage:
 // "ImageView:name" generates imageView with 1x,2x
@@ -25,7 +26,7 @@
 // "Button:Target:Transition adds a custom segue with given (name + Segue)
 
 // todo:
-// artboard name as scene name
+// auto export, config export
 // how to support universal screen sizes?
 // add gradient fill
 // add custom button (button.text, button.image)
@@ -128,6 +129,157 @@ function StoryboardExport(context) {
             }
             
         }
+    };
+    
+    var convertLayer = function(artboard, scene, viewCtrl, view, layer){
+        var children = layer.layers();
+        
+        log("count: " + children.count());
+        for(var i=0; i<children.count(); i++) {
+        //while(child = chidlrenEnum.nextObject()) {
+            
+            
+            // how to iterate layer collection/ dict ? -> another plugin
+            var child = children.layerAtIndex(i);
+            if (child.isVisible()){
+                log(child.name());
+                if (child.name().startsWith(_Button)) {
+
+                    this.assetSlices.push({
+                        layer: child,
+                        artboardName: artboard.name().trim()
+                    });
+
+                    var linkTarget = null;
+                    var transition = null;
+                    var parts = child.name().split(':');
+                    if (parts.length > 0) {
+                        linkTarget = parts[1];
+                    }
+                    if (parts.length > 1) {
+                        transition = parts[2];
+                    }
+
+                    var btn = new Button(artboard.name().trim() + _sep + child.name(), child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height());
+                    view.subviews.push( btn );
+                    this.storyboard.resources.push( new Image(artboard.name().trim() + _sep + child.name(), child.frame().width(), child.frame().height()) );
+
+                    if (linkTarget) {
+                        if (linkTarget == "Exit") {
+                            var exit = new Exit();
+                            scene.objects.push(exit);
+                            if (transition) {
+                                btn.connections.push( new Segue( exit.ID, "unwind", transition + "Segue" ) );   
+                            }
+                            else {
+                                btn.connections.push( new Segue( exit.ID, "unwind" ) );   
+                            }
+                        }
+                        else {
+
+                            this.links.push({
+                            viewController: viewCtrl,
+                            button: btn,
+                            target: linkTarget,
+                            transition: transition
+                            }); 
+
+                        }
+
+                    }
+
+                }
+                /*
+                else if (child.isKindOfClass(MSLayerGroup)) {
+                    var childView = new View();
+                    childView.subviews = [];
+                    childView.rect = new Rect(child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height());
+                    view.subviews.push(childView);
+                    convertLayer(artboard, scene, viewCtrl, childView, child);
+                }
+                else if(child.isKindOfClass(MSShapeGroup)) {
+
+                    this.assetSlices.push({
+                        layer: child,
+                        artboardName: artboard.name().trim();
+                    });
+
+                    // add imageview
+
+                    view.subviews.push( new ImageView(artboard.name().trim() + _sep + child.name(), child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height()) );
+
+                    this.storyboard.resources.push( new Image(artboard.name().trim() + _sep + child.name(), child.frame().width(), child.frame().height()) );
+
+                }
+                */
+            }
+        }
+    }
+    
+    this.autoCreateStoryboard = function(selection){
+        
+        var artboards = this.document.currentPage().artboards().objectEnumerator();
+        
+        if (selection && selection.count() > 0) {
+            log(selection.count());
+            artboards = selection.objectEnumerator();
+        }
+        
+        var initalViewControllerDefined = false;
+        // for each artboard do create viewcontroller
+        //var artboards = this.document.currentPage().artboards().objectEnumerator();
+        while (artboard = artboards.nextObject()) {
+            var artboardName = artboard.name().trim();
+            log(artboardName);
+
+            var scene = new Scene();
+            scene.point = new Point(artboard.frame().x(), artboard.frame().y());
+            var viewCtrl = new ViewController("ViewController", artboardName);
+            scene.objects.push(viewCtrl);
+            scene.objects.push(new Placeholder());
+            this.storyboard.scenes.push(scene);
+            viewCtrl.view.subviews = [];
+            // collect all view controllers by name
+            this.viewControllers[artboardName] = viewCtrl;
+
+            // just select the first artboard as inital view
+            if (!initalViewControllerDefined) {
+                this.storyboard.initialViewController = viewCtrl.ID;
+                initalViewControllerDefined = true;
+            }
+
+            // determine screen type and size
+            var screenType = getScreenByWidthAndHeight(artboard.frame().width(), artboard.frame().height());
+            if (screenType) {
+                viewCtrl.simulatedScreenMetrics = new SimulatedScreenMetrics(screenType);
+                // check for landscape
+                if (artboard.frame().width() > artboard.frame().height()) {
+                    viewCtrl.simulatedOrientationMetrics = new SimulatedOrientationMetrics("landscapeRight");
+                }
+                
+                viewCtrl.view.rect = new Rect(0, 0, artboard.frame().width(), artboard.frame().height());
+            }
+
+            convertLayer(artboard, scene, viewCtrl, viewCtrl.view, artboard);
+
+        }
+
+        // resolve links:
+        for (var i=0; i<this.links.length; i++) {
+            var link = this.links[i];
+            var viewCtrl = this.viewControllers[link.target];
+            if (viewCtrl) {
+                var btn = link.button;
+                if (link.transition){
+                    btn.connections.push( new Segue( viewCtrl.ID, "show", link.transition + "Segue" ) );   
+                }
+                else {
+                    btn.connections.push( new Segue( viewCtrl.ID, "show" ) );   
+                }
+                log ("connected to:" + link.target); 
+            }
+        }
+        
     };
     
     this.createStoryboard = function(selection){

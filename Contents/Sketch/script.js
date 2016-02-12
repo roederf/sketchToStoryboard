@@ -32,7 +32,8 @@ var onRun = function(context)
     //text += readTextFromFile(templateUrl);
     
     var storyboardExport = new StoryboardExport(context);
-    storyboardExport.createStoryboard(context.selection);
+    //storyboardExport.createStoryboard(context.selection);
+    storyboardExport.autoCreateStoryboard(context.selection);
     storyboardExport.export(directory, filename);
     
     log("success.");
@@ -42,6 +43,7 @@ var onRun = function(context)
 
 function showMessage(msg) {
     var app = [NSApplication sharedApplication];
+    
     [app displayDialog:msg withTitle:"Message"];
 }
 
