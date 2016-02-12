@@ -47,13 +47,17 @@ function Scene() {
     }
 }
 
-function ViewController(name) {
+function ViewController(name, title) {
     this.ID = generateID();
     this.customClass = name;
     this.customModuleProvider = "target";
     this.sceneMemberID = "viewController";
     this.layoutGuides = [ new ViewControllerLayoutGuide("top"), new ViewControllerLayoutGuide("bottom") ];
     this.view = new View();
+    if (title){
+        this.title = title;    
+    }
+    
     //this.simulatedScreenMetrics = new SimulatedScreenMetrics("retina47");
         
     this.writeXml = function(tablevel) {

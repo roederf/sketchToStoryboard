@@ -25,7 +25,7 @@
 // "Button:Target:Transition adds a custom segue with given (name + Segue)
 
 // todo:
-// 
+// artboard name as scene name
 // how to support universal screen sizes?
 // add gradient fill
 // add custom button (button.text, button.image)
@@ -94,13 +94,40 @@ function StoryboardExport(context) {
         [fileManager createDirectoryAtPath:name withIntermediateDirectories:true attributes:nil error:nil];
     };
     
-    var createAsset = function(document, layer, dir, imageName, ext, scale) {
+    var createAssetSlice = function(document, layer, dir, imageName, ext, scale) {
         var imageFilename = imageName + ext + '.png';
         rect = [[layer absoluteRect] rect];
         slice = [MSExportRequest requestWithRect:rect scale:scale];
         [document saveArtboardOrSlice:slice toFile:dir + imageFilename];
 
         return imageFilename;
+    };
+    
+    var createAssetLayer = function(document, layer, dir, image_set) {
+        //var imageFilename = imageName + ext + '.png';
+        //rect = [[layer absoluteRect] rect];
+        
+        //export = [[MSExportRequest alloc] init];
+        
+        //export.scale = scale;
+        //if ([export layerIsIncluded:layer]){
+        requestsArray = [MSExportRequest exportRequestsFromExportableLayer:layer];
+        var requests = requestsArray.objectEnumerator();
+        var count = 0;
+        while( request = requests.nextObject() ){
+            var filename = request.name() + "." + request.format();
+            var fullName = dir + filename;
+            
+            log(filename);
+            [document saveExportRequest:request toFile:fullName];
+            if (request.scale() == 1.0){
+                image_set.images[0].filename = filename;
+            }
+            else if (request.scale() == 2.0){
+                image_set.images[1].filename = filename;
+            }
+            
+        }
     };
     
     this.createStoryboard = function(selection){
@@ -121,7 +148,7 @@ function StoryboardExport(context) {
 
             var scene = new Scene();
             scene.point = new Point(artboard.frame().x(), artboard.frame().y());
-            var viewCtrl = new ViewController("ViewController");
+            var viewCtrl = new ViewController("ViewController", artboardName);
             scene.objects.push(viewCtrl);
             scene.objects.push(new Placeholder());
             this.storyboard.scenes.push(scene);
@@ -254,6 +281,8 @@ function StoryboardExport(context) {
                     });
 
                     // add imageview
+                    var frame = layer.frame();
+                    log("position: " + frame.x() + " " + frame.y());
                     viewCtrl.view.subviews.push( new ImageView(artboardName + _sep + name, layer.frame().x(), layer.frame().y(), layer.frame().width(), layer.frame().height()) );
 
                     this.storyboard.resources.push( new Image(artboardName + _sep + name, layer.frame().width(), layer.frame().height()) );
@@ -316,8 +345,9 @@ function StoryboardExport(context) {
             var imageName = asset.artboardName + _sep + layer.name();
             var imageDir = directory + '/Assets.xcassets/' + imageName + '.imageset/';
                         
-            image_set.images[0].filename = createAsset(this.document, layer, imageDir, imageName, '@1x', 1.0);
-            image_set.images[1].filename = createAsset(this.document, layer, imageDir, imageName, '@2x', 2.0);
+            //image_set.images[0].filename = createAssetSlice(this.document, layer, imageDir, imageName, '@1x', 1.0);
+            //image_set.images[1].filename = createAssetSlice(this.document, layer, imageDir, imageName, '@2x', 2.0);
+            createAssetLayer(this.document, layer, imageDir, image_set);       
             
             text = JSON.stringify(image_set);
         
