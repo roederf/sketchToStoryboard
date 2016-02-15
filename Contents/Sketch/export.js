@@ -131,87 +131,96 @@ function StoryboardExport(context) {
         }
     };
     
-    var convertLayer = function(artboard, scene, viewCtrl, view, layer){
+    var convertAsImageView = function(child, artboard, view, assetSlices, storyboard) {
+        assetSlices.push({
+            layer: child,
+            artboardName: artboard.name().trim()
+        });
+
+        // add imageview
+        view.subviews.push( new ImageView(artboard.name().trim() + _sep + child.name(), child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height()) );
+
+        storyboard.resources.push( new Image(artboard.name().trim() + _sep + child.name(), child.frame().width(), child.frame().height()) );
+    };
+    
+    var convertAsButton = function(child, artboard, view, viewCtrl, assetSlices, storyboard, scene, links) {
+        assetSlices.push({
+            layer: child,
+            artboardName: artboard.name().trim()
+        });
+
+        var linkTarget = null;
+        var transition = null;
+        var parts = child.name().split(':');
+        if (parts.length > 0) {
+            linkTarget = parts[1];
+        }
+        if (parts.length > 1) {
+            transition = parts[2];
+        }
+
+        var btn = new Button(artboard.name().trim() + _sep + child.name(), child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height());
+        view.subviews.push( btn );
+        storyboard.resources.push( new Image(artboard.name().trim() + _sep + child.name(), child.frame().width(), child.frame().height()) );
+
+        if (linkTarget) {
+            if (linkTarget == "Exit") {
+                var exit = new Exit();
+                scene.objects.push(exit);
+                if (transition) {
+                    btn.connections.push( new Segue( exit.ID, "unwind", transition + "Segue" ) );   
+                }
+                else {
+                    btn.connections.push( new Segue( exit.ID, "unwind" ) );   
+                }
+            }
+            else {
+
+                links.push({
+                viewController: viewCtrl,
+                button: btn,
+                target: linkTarget,
+                transition: transition
+                }); 
+
+            }
+
+        }
+    };
+    
+    this.convertLayer = function(artboard, scene, viewCtrl, view, layer){
         var children = layer.layers();
         
-        log("count: " + children.count());
         for(var i=0; i<children.count(); i++) {
-        //while(child = chidlrenEnum.nextObject()) {
             
-            
-            // how to iterate layer collection/ dict ? -> another plugin
-            var child = children.layerAtIndex(i);
+            var child = children.objectAtIndex(i);
             if (child.isVisible()){
                 log(child.name());
                 if (child.name().startsWith(_Button)) {
-
-                    this.assetSlices.push({
-                        layer: child,
-                        artboardName: artboard.name().trim()
-                    });
-
-                    var linkTarget = null;
-                    var transition = null;
-                    var parts = child.name().split(':');
-                    if (parts.length > 0) {
-                        linkTarget = parts[1];
-                    }
-                    if (parts.length > 1) {
-                        transition = parts[2];
-                    }
-
-                    var btn = new Button(artboard.name().trim() + _sep + child.name(), child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height());
-                    view.subviews.push( btn );
-                    this.storyboard.resources.push( new Image(artboard.name().trim() + _sep + child.name(), child.frame().width(), child.frame().height()) );
-
-                    if (linkTarget) {
-                        if (linkTarget == "Exit") {
-                            var exit = new Exit();
-                            scene.objects.push(exit);
-                            if (transition) {
-                                btn.connections.push( new Segue( exit.ID, "unwind", transition + "Segue" ) );   
-                            }
-                            else {
-                                btn.connections.push( new Segue( exit.ID, "unwind" ) );   
-                            }
-                        }
-                        else {
-
-                            this.links.push({
-                            viewController: viewCtrl,
-                            button: btn,
-                            target: linkTarget,
-                            transition: transition
-                            }); 
-
-                        }
-
-                    }
-
+                    
+                    convertAsButton(child, artboard, view, viewCtrl, this.assetSlices, this.storyboard, scene, this.links);
                 }
-                /*
+                else if (child.name().startsWith(_ImageView)) {
+                    
+                    convertAsImageView(child, artboard, view, this.assetSlices, this.storyboard);
+                }
                 else if (child.isKindOfClass(MSLayerGroup)) {
                     var childView = new View();
                     childView.subviews = [];
                     childView.rect = new Rect(child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height());
                     view.subviews.push(childView);
-                    convertLayer(artboard, scene, viewCtrl, childView, child);
+                    this.convertLayer(artboard, scene, viewCtrl, childView, child);
                 }
                 else if(child.isKindOfClass(MSShapeGroup)) {
-
-                    this.assetSlices.push({
-                        layer: child,
-                        artboardName: artboard.name().trim();
-                    });
-
-                    // add imageview
-
-                    view.subviews.push( new ImageView(artboard.name().trim() + _sep + child.name(), child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height()) );
-
-                    this.storyboard.resources.push( new Image(artboard.name().trim() + _sep + child.name(), child.frame().width(), child.frame().height()) );
-
+                    
+                    convertAsImageView(child, artboard, view, this.assetSlices, this.storyboard);
                 }
-                */
+                else if (child.isKindOfClass(MSTextLayer)) {
+                    //log("found text: " + child.name());
+                    
+                    var label = new Label(child.stringValue(), child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height()+1);
+                    viewCtrl.view.subviews.push( label );
+                }
             }
         }
     }
@@ -260,7 +269,7 @@ function StoryboardExport(context) {
                 viewCtrl.view.rect = new Rect(0, 0, artboard.frame().width(), artboard.frame().height());
             }
 
-            convertLayer(artboard, scene, viewCtrl, viewCtrl.view, artboard);
+            this.convertLayer(artboard, scene, viewCtrl, viewCtrl.view, artboard);
 
         }
 
