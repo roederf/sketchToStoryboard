@@ -3,15 +3,23 @@
   "commands" : [
     {
       "script" : "script.js",
-      "handler" : "onRun",
+      "handler" : "onExport",
       "shortcut" : "",
-      "name" : "Export",
+      "name" : "Old Export",
       "identifier" : "exportstoryboard"
+    },
+    {
+      "script" : "script.js",
+      "handler" : "onTreeExport",
+      "shortcut" : "",
+      "name" : "Better Export",
+      "identifier" : "treeexportstoryboard"
     }
   ],
   "menu" : {
     "items" : [
-      "exportstoryboard"
+      "exportstoryboard",
+      "treeexportstoryboard"
     ],
     "title" : "PrototypeStoryboard"
   },

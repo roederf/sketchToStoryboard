@@ -1,8 +1,8 @@
 //
 //  AppDelegate.swift
-//  ExportTest
+//  Prototype
 //
-//  Created by Florian Roeder on 02/02/16.
+//  Created by Florian Roeder on 16/02/16.
 //  Copyright © 2016 SprintEins GmbH. All rights reserved.
 //
 

@@ -14,7 +14,28 @@ var onPrepare = function(content)
 }
 */
 
-var onRun = function(context)
+var onExport = function(context)
+{
+    var documentName = context.document.displayName();
+    var plugin = context.plugin;
+    //var command = context.command;
+    
+    var fileURL = fileSaver();
+    var directory = fileURL.path();
+    var filename = fileURL.path() + '/Main.storyboard';
+    
+    log("Writing document: " + filename);
+    
+    var storyboardExport = new StoryboardExport(context);
+    storyboardExport.createStoryboard(context.selection);
+    storyboardExport.export(directory, filename);
+    
+    log("success.");
+    
+    showMessage("Storyboard created.");
+};
+
+var onTreeExport = function(context)
 {
     var documentName = context.document.displayName();
     var plugin = context.plugin;
@@ -32,7 +53,6 @@ var onRun = function(context)
     //text += readTextFromFile(templateUrl);
     
     var storyboardExport = new StoryboardExport(context);
-    //storyboardExport.createStoryboard(context.selection);
     storyboardExport.autoCreateStoryboard(context.selection);
     storyboardExport.export(directory, filename);
     
