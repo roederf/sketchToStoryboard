@@ -10,16 +10,19 @@ Installation:
 - Plugin should show up in Sketch
 
 How to use:
-- Create a new SingleView iOS Application with Xcode
+- Copy the "Prototype" xcode project to some folder
 - Select the artboards from your sketch documents (or nothing to export all)
-- Click "Export" from this plugin
+- Click "Export Only With Keywords" from this plugin to export only layers named with keywords as a flat structure OR
+- Click "Export With Layers" to export remain all layers during export and to convert text and images automatically
 - Choose project folder of your created iOS App
 - The "Main.Storyboard" file will be recreated
-- Run your prototype app
+- Run your prototype app from xcode
 
 Features and details:
 - Each Artboard will be converted into an own ViewController
 - The First Artboard will be the initial ViewController
+
+In case of "Export Only With Keywords":
 - All assets are created as 1x and 2x automatically
 - Name a layer or slice as "ImageView:someName" and it will be converted as ImageView with image called "someName"
 - Name a layer "Button:artboardName" and it will be converted into a Button with image and a segue to ViewController "artboardName"
@@ -29,6 +32,15 @@ Features and details:
 - Name a text "Label:something" to create a Label (system font is used)
 - Name a text "TextView:something" to create a TextView (not editable by default, currently produces wrong margins)
 
+In case of "Export With Layers":
+- All shapes and images are converted as imageview by default with 1x
+- Text will be exported as label (currently only fontsize is exported)
+- Add Export 1x,2x,3x where needed (with Sketch Export Tool)
+- Name a layer "ImageView:someName" and it will convert whole subtree as ImageView (and ignore subtree structure)
+- Name a layer "Button:artboardName" and it will be converted into a Button with image and a segue to ViewController "artboardName"
+- Name a layer "Button:artboardName:transition" and it will be converted into a Button with image and a custom segue called "transitionSegue"
+- Name a layer "Button:Exit" to create a button and a exit segue
+
 Next Steps:
 - Will add a complete example
-- Will add the xcode project with customview and transitions
+- Some Sketch UI instead of names
