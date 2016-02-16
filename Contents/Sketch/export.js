@@ -26,7 +26,8 @@
 // "Button:Target:Transition adds a custom segue with given (name + Segue)
 
 // todo:
-// auto export, config export
+// auto export, 
+// config export
 // how to support universal screen sizes?
 // add gradient fill
 // add custom button (button.text, button.image)
@@ -195,7 +196,7 @@ function StoryboardExport(context) {
             
             var child = children.objectAtIndex(i);
             if (child.isVisible()){
-                log(child.name());
+                //log(child.name());
                 if (child.name().startsWith(_Button)) {
                     
                     convertAsButton(child, artboard, view, viewCtrl, this.assetSlices, this.storyboard, scene, this.links);
@@ -204,22 +205,27 @@ function StoryboardExport(context) {
                     
                     convertAsImageView(child, artboard, view, this.assetSlices, this.storyboard);
                 }
-                else if (child.isKindOfClass(MSLayerGroup)) {
-                    var childView = new View();
-                    childView.subviews = [];
-                    childView.rect = new Rect(child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height());
-                    view.subviews.push(childView);
-                    this.convertLayer(artboard, scene, viewCtrl, childView, child);
-                }
                 else if(child.isKindOfClass(MSShapeGroup)) {
-                    
+                    //log("found shape group: " + child.name());
                     convertAsImageView(child, artboard, view, this.assetSlices, this.storyboard);
                 }
                 else if (child.isKindOfClass(MSTextLayer)) {
                     //log("found text: " + child.name());
                     
                     var label = new Label(child.stringValue(), child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height()+1);
-                    viewCtrl.view.subviews.push( label );
+                    label.fontDescription = new FontDescription(child.fontSize());
+                    view.subviews.push( label );
+                }
+                else if (child.isKindOfClass(MSLayerGroup)) {
+                    var childView = new View(child.name());
+                    childView.color = new RGBColor(1,1,1,0);    // transparent
+                    childView.subviews = [];
+                    childView.rect = new Rect(child.frame().x(), child.frame().y(), child.frame().width(), child.frame().height());
+                    view.subviews.push(childView);
+                    this.convertLayer(artboard, scene, viewCtrl, childView, child);
+                }
+                else {
+                    convertAsImageView(child, artboard, view, this.assetSlices, this.storyboard);
                 }
             }
         }

@@ -41,6 +41,7 @@ function Color() {
     this.white = "1";
     this.alpha = "1";
     this.colorSpace = "calibratedWhite";
+    
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "color", tablevel);
         
@@ -54,6 +55,7 @@ function RGBColor(r,g,b,a){
     this.blue = b;
     this.alpha = a;
     this.colorSpace = "calibratedRGB";
+    
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "color", tablevel);
         

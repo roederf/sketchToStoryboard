@@ -53,9 +53,13 @@ function ViewController(name, title) {
     this.customModuleProvider = "target";
     this.sceneMemberID = "viewController";
     this.layoutGuides = [ new ViewControllerLayoutGuide("top"), new ViewControllerLayoutGuide("bottom") ];
-    this.view = new View();
+    
     if (title){
-        this.title = title;    
+        this.title = title;
+        this.view = new View(title);    
+    }
+    else {
+        this.view = new View();
     }
     
     //this.simulatedScreenMetrics = new SimulatedScreenMetrics("retina47");
@@ -65,14 +69,20 @@ function ViewController(name, title) {
     }
 }
 
-function View() {
+function View(userLabel) {
     this.key = "view";
     this.contentMode ="scaleToFill";
     this.ID = generateID();
+    this.fixedFrame = "YES";
+    this.translatesAutoresizingMaskIntoConstraints = "NO";
     this.rect = new Rect(0,0,600,600);
     this.autoresizingMask = new AutoresizeMask();
     this.animations = new Animations();
     this.color = new Color();
+    if (userLabel){
+        log("found a label: " + userLabel);
+        this.userLabel = userLabel;
+    }
     this.writeXml = function(tablevel) {
         return writeXmlObject(this, "view", tablevel);
     }

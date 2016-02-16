@@ -5,14 +5,14 @@
       "script" : "script.js",
       "handler" : "onExport",
       "shortcut" : "",
-      "name" : "Old Export",
+      "name" : "Export Only Keywords",
       "identifier" : "exportstoryboard"
     },
     {
       "script" : "script.js",
       "handler" : "onTreeExport",
       "shortcut" : "",
-      "name" : "Better Export",
+      "name" : "Export With Layers",
       "identifier" : "treeexportstoryboard"
     }
   ],
